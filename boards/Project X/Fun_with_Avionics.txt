@@ -1,24 +1,9 @@
 
 //*****************************************************************************
 //
-//
-// Copyright (c) 2010-2011 Texas Instruments Incorporated.  All rights reserved.
-// Software License Agreement
-// 
-// Texas Instruments (TI) is supplying this software for use solely and
-// exclusively on TI's microcontroller products. The software is owned by
-// TI and/or its suppliers, and is protected under applicable copyright
-// laws. You may not combine this software with "viral" open-source
-// software in order to form a larger program.
-// 
-// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
-// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
-// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
-// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
-// DAMAGES, FOR ANY REASON WHATSOEVER.
-// 
-// This is part of revision 6852 of the Stellaris Firmware Development Package.
+// @file Fun_with_Avionics.c
+// @author Ian Glass
+// @brief Main file for operating helicopter
 //
 //*****************************************************************************
 
@@ -102,7 +87,8 @@ uint16_t Disp_Array[8] = {15, 10, 10 ,10, 10, 10, 10, 10};
 uint16_t Gain_Array[6] = {27, 3, 3, 60, 1, 2};
 uint16_t Array_Count = 0;
 
-void Motors_Off(void) {
+void Motors_Off(void) 
+{
 	if (G_Mid_Main_Duty_Cycle > 0 && G_Mid_Rotor_Duty_Cycle > 0 && G_Start_Up_Count > 1200) {
 		G_Mid_Main_Duty_Cycle--;
 		G_Mid_Rotor_Duty_Cycle--;
@@ -110,7 +96,8 @@ void Motors_Off(void) {
 	}
 }
 
-void PID_Control(void) {
+void PID_Control(void) 
+{
 	//Main rotor PID	
 	if (G_Actual_Altitude <= 3 && G_Block_Buttons) {
 		Motors_Off();
@@ -160,14 +147,16 @@ void PID_Control(void) {
 }
 
 //Correlates Systicks with an 'Adjustable' ticks variables and sets button poll true for every wrap on zero
-void SysTickHandler (void) {
+void SysTickHandler (void) 
+{
 	G_Poll_Buttons_Count++;
 	G_Start_Up_Count++;
 	PID_Control();
 }
 
-//Single interrupt implementation of QE PF5 & PF7 NOT QUITE WORKING!!!
-/*void Phase_Handler(void) {
+//Single interrupt implementation of QE PF5 & PF7
+/*void Phase_Handler(void) 
+{
 	GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_5);
 	GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_7);
 	if (G_Prev_Phase_A_State != Is_PF5_High) {
@@ -199,7 +188,8 @@ void SysTickHandler (void) {
 
 //First two interrupt implemenation of QE
 //PA1/U0Tx (phase A) interrupt handler
-void Phase_A_Handler(void) {
+void Phase_A_Handler(void) 
+{
 	GPIOPinIntClear(GPIO_PORTA_BASE, GPIO_PIN_1);
 	if (!Is_PA1_High) {
 		G_Phase_A_State = 0;
@@ -216,7 +206,8 @@ void Phase_A_Handler(void) {
 }
 
 //PF5 (phase B) interrupt handler
-void Phase_B_Handler(void) {
+void Phase_B_Handler(void) 
+{
 	GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_5);
 	if (!Is_PF5_High) {
 		G_Phase_B_State = 0;
@@ -374,7 +365,8 @@ void initialise(void)
   
 }
 
-void Update_Display (void) {
+void Update_Display (void) 
+{
 		
 	//Re-displays on screen-Desired values
 	sprintf(StrBuff,"Desired Alt/Yaw: ");
@@ -458,7 +450,8 @@ void Update_Display (void) {
 	//RIT128x96x4ImageDraw(G_Yaw_Disp_Array, 10, 90, 120, 100);
 }
 
-void Get_ADC(void) {
+void Get_ADC(void) 
+{
 	
     	// Trigger the ADC conversion.
         ADCProcessorTrigger(ADC0_BASE, 3);
@@ -494,7 +487,8 @@ void Get_ADC(void) {
         }
 }
 
-void Toggle_Land(void) {
+void Toggle_Land(void) 
+{
 	if (Select_Button_Pushed && !G_Block_Buttons && SW2_Up) {
 		G_Block_Buttons = 1;
 		SW2_Up = 0;
@@ -505,13 +499,15 @@ void Toggle_Land(void) {
 	}	
 }
 
-void Land(void) {
+void Land(void) 
+{
 	if (G_Actual_Altitude <= G_Desired_Altitude) {
 		G_Desired_Altitude -= 5;
 	}
 }
 
-void Take_Off(void){
+void Take_Off(void)
+{
 	if (G_Mid_Main_Duty_Cycle < 50 && G_Mid_Rotor_Duty_Cycle < 50 && G_Start_Up_Count > 1200) {
 		G_Mid_Main_Duty_Cycle++;
 		G_Mid_Rotor_Duty_Cycle++;
@@ -519,7 +515,8 @@ void Take_Off(void){
 	}
 }
 
-void Poll_Buttons(void) {
+void Poll_Buttons(void) 
+{
 	if (!G_Block_Buttons) {
 		if (Up_DPad_Pushed && SW3_Up) {
 			if (Array_Count == 0 && G_Desired_Altitude < 100) {
@@ -573,7 +570,8 @@ void Poll_Buttons(void) {
 	G_Poll_Buttons_Count = 0;
 }
 
-void Button_Debounce(void) {
+void Button_Debounce(void) 
+{
 	if (!Select_Button_Pushed) {
 		SW2_Up = 1;
 	}
