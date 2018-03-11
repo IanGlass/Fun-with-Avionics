@@ -1,0 +1,1 @@
+"./drivers/rit128x96x4.obj" "./startup_ccs.obj" "./gpio_jtag.obj" -l"rtsv7M3_T_le_eabi.lib" -l"C:/yagarto-ARM/my_proj/StellarisWare/boards/ek-lm3s1968/gpio_jtag/ccs/../../../../driverlib/ccs/Debug/driverlib.lib" "C:/yagarto-ARM/my_proj/StellarisWare/boards/ek-lm3s1968/gpio_jtag/gpio_jtag_ccs.cmd" 

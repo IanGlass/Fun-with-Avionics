@@ -1,0 +1,1 @@
+"./drivers/rit128x96x4.obj" "./startup_ccs.obj" "./boot_demo1.obj" -l"rtsv7M3_T_le_eabi.lib" -l"C:/yagarto-ARM/my_proj/StellarisWare/boards/ek-lm3s1968/boot_demo1/ccs/../../../../driverlib/ccs/Debug/driverlib.lib" "C:/yagarto-ARM/my_proj/StellarisWare/boards/ek-lm3s1968/boot_demo1/boot_demo1_ccs.cmd" 

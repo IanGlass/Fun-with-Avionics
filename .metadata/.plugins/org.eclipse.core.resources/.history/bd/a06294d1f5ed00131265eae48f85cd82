@@ -1,0 +1,156 @@
+//*****************************************************************************
+//
+// single_ended.c - Example demonstrating how to configure the ADC for
+// single ended operation.
+//
+// Copyright (c) 2010-2011 Texas Instruments Incorporated.  All rights reserved.
+// Software License Agreement
+//
+// Texas Instruments (TI) is supplying this software for use solely and
+// exclusively on TI's microcontroller products. The software is owned by
+// TI and/or its suppliers, and is protected under applicable copyright
+// laws. You may not combine this software with "viral" open-source
+// software in order to form a larger program.
+//
+// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
+// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
+// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
+// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
+// DAMAGES, FOR ANY REASON WHATSOEVER.
+//
+// This is part of revision 6852 of the Stellaris Firmware Development Package.
+//
+//*****************************************************************************
+
+#include "my_adc.h"  // header file for my_adc.c
+
+//Function prototypes
+void intialise(void);
+void updateDisplay(void);
+
+// Global variables
+char strBuf[bufsize];
+int PG4High = 0;
+int PF5High = 0;
+int Timer = 0;
+
+//Works, echo receive signal
+void PG5Handler(void) {
+	if (GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_5)) {
+		Timer = 0;
+		TimerEnable(TIMER1_BASE, TIMER_B);
+	}
+	else {
+		TimerDisable(TIMER1_BASE, TIMER_B);
+	}
+	GPIOPinIntClear(GPIO_PORTG_BASE, GPIO_PIN_5);
+}
+
+//counts number of overflows
+void Unwrap(void) {
+	//Timer++;
+	if (PG4High) {
+		GPIOPinWrite(GPIO_PORTG_BASE, GPIO_PIN_4,0);
+		PG4High = 0;
+	}
+	else {
+		GPIOPinWrite(GPIO_PORTG_BASE, GPIO_PIN_4, GPIO_PIN_4);
+		PG4High = 1;
+	}
+	TimerIntClear(TIMER1_BASE, TIMER_TIMB_TIMEOUT);
+}
+
+//Works, echo trigger signal
+void Timer0IntHandler(void) {
+	if (PF5High) {
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_5, 0);
+		PF5High = 0;
+	}
+	else {
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_5, GPIO_PIN_5);
+		PF5High = 1;
+	}
+	TimerIntClear(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+}
+
+void initialise(void)
+{
+	SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
+	                   SYSCTL_XTAL_16MHZ);
+  
+  
+  //Echo Receive
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+  GPIODirModeSet(GPIO_PORTG_BASE, GPIO_PIN_5, GPIO_DIR_MODE_IN);
+  GPIOPadConfigSet(GPIO_PORTG_BASE, GPIO_PIN_5, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);
+  GPIOPortIntRegister(GPIO_PORTG_BASE, PG5Handler);
+  GPIOPinIntEnable(GPIO_PORTG_BASE, GPIO_PIN_5);
+  GPIOIntTypeSet(GPIO_PORTG_BASE, GPIO_PIN_5, GPIO_BOTH_EDGES);
+  
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
+  TimerConfigure(TIMER1_BASE, TIMER_CFG_16_BIT_PAIR |
+                     TIMER_CFG_B_PERIODIC);
+  //Timer overflows at 1735Hz
+  //TimerPrescaleSet(TIMER1_BASE, TIMER_B, 250);
+  TimerLoadSet(TIMER1_BASE, TIMER_B, SysCtlClockGet()/100000);
+  
+  TimerIntRegister(TIMER1_BASE, TIMER_B, Unwrap);
+  TimerIntEnable(TIMER1_BASE, TIMER_TIMB_TIMEOUT);
+  IntEnable(INT_TIMER1B);
+  TimerEnable(TIMER1_BASE, TIMER_B);
+  
+  //test signal
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+  GPIODirModeSet(GPIO_PORTG_BASE, GPIO_PIN_4, GPIO_DIR_MODE_OUT);
+  GPIOPadConfigSet(GPIO_PORTG_BASE, GPIO_PIN_4, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);
+  
+  //Echo Trigger
+  //PF7 Init
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+  GPIODirModeSet(GPIO_PORTF_BASE, GPIO_PIN_5, GPIO_DIR_MODE_OUT);
+  GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_5, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);
+  //
+  
+  //Timer Init
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+  TimerConfigure(TIMER0_BASE, TIMER_CFG_16_BIT_PAIR |
+                     TIMER_CFG_B_PERIODIC);
+  //Timer overflows at 50Hz
+  TimerPrescaleSet(TIMER0_BASE, TIMER_B, 250);
+  TimerLoadSet(TIMER0_BASE, TIMER_B, SysCtlClockGet()/10000);
+  TimerIntRegister(TIMER0_BASE, TIMER_B, Timer0IntHandler);
+  TimerIntEnable(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+  IntEnable(INT_TIMER0B);
+  TimerEnable(TIMER0_BASE, TIMER_B);
+  IntMasterEnable();
+  //
+
+  // intialise the OLED display
+  RIT128x96x4Init(1000000);	
+}
+
+void updateDisplay(void)
+{
+	
+     usprintf(strBuf, "%ul", Timer); // try %d
+
+     RIT128x96x4Clear(); // gets rid of the residual digits
+     RIT128x96x4StringDraw( strBuf, 10, 60, 15);
+
+}
+
+
+int main(void)
+{
+    initialise();
+
+    while(1)
+    {
+
+        
+        updateDisplay();
+        
+ 		//SysCtlDelay(SysCtlClockGet() / 12);
+    }
+}

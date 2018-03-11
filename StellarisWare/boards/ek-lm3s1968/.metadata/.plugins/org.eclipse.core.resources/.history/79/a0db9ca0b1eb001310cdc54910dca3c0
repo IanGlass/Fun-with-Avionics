@@ -1,0 +1,139 @@
+//*****************************************************************************
+//
+// single_ended.c - Example demonstrating how to configure the ADC for
+// single ended operation.
+//
+// Copyright (c) 2010-2011 Texas Instruments Incorporated.  All rights reserved.
+// Software License Agreement
+//
+// Texas Instruments (TI) is supplying this software for use solely and
+// exclusively on TI's microcontroller products. The software is owned by
+// TI and/or its suppliers, and is protected under applicable copyright
+// laws. You may not combine this software with "viral" open-source
+// software in order to form a larger program.
+//
+// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
+// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
+// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
+// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
+// DAMAGES, FOR ANY REASON WHATSOEVER.
+//
+// This is part of revision 6852 of the Stellaris Firmware Development Package.
+//
+//*****************************************************************************
+
+#include "my_adc.h"  // header file for my_adc.c
+
+//Function prototypes
+void intialise(void);
+void updateDisplay(void);
+
+// Global variables
+char strBuf[bufsize];
+
+//*****************************************************************************
+//
+//! This example is designed as an introduction to your
+//! "voltaliser" project. In your first lab you will compile, link,
+//! and program your EVK-LM3S1968 dev board to acquire
+//! a voltage signal and show the equivilant binary code
+//! on the OLED display.
+//!
+//! This example shows how to setup ADC0 as a single ended input and take a
+//! single sample on ADC0/B1.
+//!
+//! This example uses the following peripherals and I/O signals.
+//! - ADC0 peripheral (Pin 63 on your board header)
+//! - GND (Pin 58 on your board header)
+
+//! Author: Dr. Steve Weddell
+//! ECE, University of Canterbury
+//! January 31, 2012
+//! Data acquisition example for ENCE361
+//!
+
+void Echo_Receive();
+
+int pin_low = 0;
+unsigned long Timer_Value = 10;
+
+//Could make PWM to do same thing
+void Echo_Trigger() {
+	TimerIntDisable(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+	TimerIntClear(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+	if (pin_low) {
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_5, 1);
+		pin_low = 0;
+	}
+	else {
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_5, 0);
+		pin_low = 1;
+	}
+	TimerIntEnable(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+}
+
+void initialise(void)
+{
+  SysCtlClockSet(SYSCTL_SYSDIV_10 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN |
+                   SYSCTL_XTAL_8MHZ);	
+
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+
+  //Initialise GPIO ports for triggering and sampling
+  GPIODirModeSet(GPIO_PORTF_BASE, GPIO_PIN_5, GPIO_DIR_MODE_OUT);
+
+  //Set output strength
+  GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_5, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+
+  //
+  //Timer for echo send signal
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+  TimerConfigure(TIMER0_BASE, TIMER_CFG_16_BIT_PAIR |
+                     TIMER_CFG_B_PERIODIC);
+
+  //Prescale timer
+  //TimerPrescaleSet(TIMER0_BASE, TIMER_B, 64);
+  TimerLoadSet(TIMER0_BASE, TIMER_B, SysCtlClockGet() / 1);
+  TimerIntRegister(TIMER0_BASE, TIMER_B, Echo_Trigger);
+  IntPrioritySet(INT_TIMER0B, 2);
+  //
+  //
+
+  //Globally enable interrupt peripheral
+  IntMasterEnable();
+
+  TimerIntEnable(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+  IntEnable(INT_TIMER0B);
+  TimerEnable(TIMER0_BASE, TIMER_B);
+
+  // intialise the OLED display
+  RIT128x96x4Init(1000000);	
+}
+
+void updateDisplay(void)
+{
+	
+     usprintf(strBuf, "%d", (int)Timer_Value); // try %d
+	 
+     RIT128x96x4Clear(); // gets rid of the residual digits
+     RIT128x96x4StringDraw( strBuf, 30, 50, 15); 	
+}
+
+
+int
+main(void)
+{
+
+    
+    initialise();
+
+    while(1)
+    {
+
+        
+        updateDisplay();
+        
+ 		//SysCtlDelay(SysCtlClockGet() / 12);
+    }
+}

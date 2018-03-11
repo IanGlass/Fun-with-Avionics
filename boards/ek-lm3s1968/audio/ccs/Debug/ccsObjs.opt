@@ -1,0 +1,1 @@
+"./drivers/rit128x96x4.obj" "./drivers/class-d.obj" "./startup_ccs.obj" "./audio.obj" -l"rtsv7M3_T_le_eabi.lib" -l"C:/yagarto-ARM/my_proj/StellarisWare/boards/ek-lm3s1968/audio/ccs/../../../../driverlib/ccs/Debug/driverlib.lib" "C:/yagarto-ARM/my_proj/StellarisWare/boards/ek-lm3s1968/audio/audio_ccs.cmd" 

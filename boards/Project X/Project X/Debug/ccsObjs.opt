@@ -1,0 +1,1 @@
+"./ustdlib.obj" "./startup_ccs.obj" "./rit128x96x4.obj" "./my_adc.obj" -l"C:/P/1.Reflex Visual/Prototype/Phase 1/Code/boards/Project X/Project X/../../../driverlib/ccs/Debug/driverlib.lib" -l"rtsv7M3_T_le_eabi.lib" "../lm3s1968.cmd" 

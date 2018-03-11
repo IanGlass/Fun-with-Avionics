@@ -1,0 +1,20 @@
+
+!CONFIGURATION: 'com.ti.ccstudio.buildDefinitions.TMS470.Debug.1718666909' [Tue Jan 13 21:19:57 NZDT 2015]
+
+	!TOOL: 'com.ti.ccstudio.buildDefinitions.TMS470_4.9.exe.compilerDebug.1171998146'
+
+		!ERROR: org.eclipse.cdt.managedbuilder.core.BuildException: Unexpected value type for option 'com.ti.ccstudio.buildDefinitions.TMS470_4.9.compilerID.GEN_FUNC_SUBSECTIONS': boolean
+			at com.ti.common.managedbuild.core.util.CTIManagedBuildCoreUtils.setBuildOption(CTIManagedBuildCoreUtils.java:595)
+			at com.ti.common.managedbuild.core.util.CTIManagedBuildCoreUtils.setBuildOption(CTIManagedBuildCoreUtils.java:579)
+			at com.ti.common.project.core.initializer.AConfigurationInitializer.doCopyBuildOptions(AConfigurationInitializer.java:379)
+			at com.ti.ccstudio.project.core.initializer.CCSConfigurationInitializer.doCopyBuildOptions(CCSConfigurationInitializer.java:427)
+			at com.ti.common.project.core.initializer.AConfigurationInitializer.copyBuildOptions(AConfigurationInitializer.java:106)
+			at com.ti.common.project.core.initializer.AConfigurationInitializer.internalCopyBuildOptions(AConfigurationInitializer.java:315)
+			at com.ti.common.project.core.initializer.AConfigurationInitializer.internalInitializeBuildOptions(AConfigurationInitializer.java:270)
+			at com.ti.common.project.core.initializer.AConfigurationInitializer.initializeFromExisting(AConfigurationInitializer.java:89)
+			at com.ti.common.managedbuild.ui.properties.SaveConfigurationPropertiesDialog.migrateConfiguration(SaveConfigurationPropertiesDialog.java:434)
+			at com.ti.common.managedbuild.ui.properties.SaveConfigurationPropertiesDialog.access$9(SaveConfigurationPropertiesDialog.java:422)
+			at com.ti.common.managedbuild.ui.properties.SaveConfigurationPropertiesDialog$4.run(SaveConfigurationPropertiesDialog.java:309)
+			at org.eclipse.jface.operation.ModalContext$ModalContextThread.run(ModalContext.java:113)
+		
+

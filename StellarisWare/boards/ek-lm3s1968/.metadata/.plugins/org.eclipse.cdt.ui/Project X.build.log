@@ -1,0 +1,18 @@
+
+**** Build of configuration Debug for project Project X ****
+
+"C:\\ti\\ccsv5\\utils\\bin\\gmake" -k all 
+'Building file: ../my_adc.c'
+'Invoking: TMS470 Compiler'
+"C:/ti/ccsv5/tools/compiler/arm_5.0.1/bin/armcl" -mv7M3 -g -O2 --gcc --define=ccs --define=PART_LM3S1968 --include_path="C:/ti/ccsv5/tools/compiler/arm_5.0.1/include" --include_path="C:/Proprietary/Reflex Visual/Code/boards" --include_path="C:/Proprietary/Reflex Visual/Code" --include_path="C:/Proprietary/Reflex Visual/Code/boards/ek-lm3s1968" --diag_warning=225 -me --gen_func_subsections --abi=eabi --code_state=16 --ual --preproc_with_compile --preproc_dependency="my_adc.pp"  "../my_adc.c"
+"../my_adc.c", line 162: warning: function declared implicitly
+'Finished building: ../my_adc.c'
+' '
+'Building target: ProjectX.out'
+'Invoking: TMS470 Linker'
+"C:/ti/ccsv5/tools/compiler/arm_5.0.1/bin/armcl" -mv7M3 -g -O2 --gcc --define=ccs --define=PART_LM3S1968 --diag_warning=225 -me --gen_func_subsections --abi=eabi --code_state=16 --ual -z -m"ProjectX.map" --stack_size=0x800 --heap_size=0x800 --warn_sections -i"C:/ti/ccsv5/tools/compiler/arm_5.0.1/lib" -i"C:/ti/ccsv5/tools/compiler/arm_5.0.1/include" --reread_libs --rom_model -o "ProjectX.out"  "./ustdlib.obj" "./startup_ccs.obj" "./rit128x96x4.obj" "./my_adc.obj" -l"rtsv7M3_T_le_eabi.lib" -l"C:/Proprietary/Reflex Visual/Code/boards/Project X/Project X/../../../driverlib/ccs/Debug/driverlib.lib" "../lm3s1968.cmd" 
+<Linking>
+'Finished building target: ProjectX.out'
+' '
+
+**** Build Finished ****

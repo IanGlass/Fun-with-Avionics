@@ -1,0 +1,192 @@
+//*****************************************************************************
+//
+// single_ended.c - Example demonstrating how to configure the ADC for
+// single ended operation.
+//
+// Copyright (c) 2010-2011 Texas Instruments Incorporated.  All rights reserved.
+// Software License Agreement
+//
+// Texas Instruments (TI) is supplying this software for use solely and
+// exclusively on TI's microcontroller products. The software is owned by
+// TI and/or its suppliers, and is protected under applicable copyright
+// laws. You may not combine this software with "viral" open-source
+// software in order to form a larger program.
+//
+// THIS SOFTWARE IS PROVIDED "AS IS" AND WITH ALL FAULTS.
+// NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT
+// NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. TI SHALL NOT, UNDER ANY
+// CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR CONSEQUENTIAL
+// DAMAGES, FOR ANY REASON WHATSOEVER.
+//
+// This is part of revision 6852 of the Stellaris Firmware Development Package.
+//
+//*****************************************************************************
+
+#include "my_adc.h"  // header file for my_adc.c
+
+//Function prototypes
+void intialise(void);
+void updateDisplay(void);
+
+// Global variables
+char strBuf[bufsize];
+int PG4High = 0;
+int Timer1 = 0;
+int Timer2 = 0;
+int Distance1 = 0;
+int Distance2 = 0;
+int TimerCount = 0;
+
+//Works, echo receive signal
+void PG5Handler(void) {
+	if (GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_5)) {
+		//Reset timer1
+		Timer1 = 0;
+		//Shared timer does not matter as distance only changed on pin change, Timer0IntHandler ensures time multiplexed operations
+		TimerEnable(TIMER1_BASE, TIMER_B);
+	}
+	else if (!GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_5)) {
+		TimerDisable(TIMER1_BASE, TIMER_B);
+		Timer1 = Timer1*20;
+		Distance1 = 340*Timer1/100000;
+	}
+	else if (GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_4)) {
+		//Reset timer2
+		Timer2 = 0;
+		TimerEnable(TIMER1_BASE, TIMER_B);
+	}
+	else if (!GPIOPinRead(GPIO_PORTG_BASE, GPIO_PIN_4)) {
+		TimerDisable(TIMER1_BASE, TIMER_B);
+		Timer2 = Timer2*20;
+		Distance2 = 340*Timer2/100000;
+	}
+	GPIOPinIntClear(GPIO_PORTG_BASE, GPIO_PIN_4);
+	GPIOPinIntClear(GPIO_PORTG_BASE, GPIO_PIN_5);
+}
+
+//counts
+void Unwrap(void) {
+	Timer1++;
+	Timer2++;
+	TimerIntClear(TIMER1_BASE, TIMER_TIMB_TIMEOUT);
+}
+
+//Works, echo trigger signal, calls every 20us
+void Timer0IntHandler(void) {
+	//Sonar 1 trigger high for 20us
+	if (TimerCount == 0) {
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_5, GPIO_PIN_5);
+	}
+	//Sonar 1 trigger low
+	else if (TimerCount == 1000) {
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_5, 0);
+	}
+	//Sonar 2 trigger high for 20us, wait 35ms, long enough for sound wave return
+	else if (TimerCount == 1750) {
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_7, GPIO_PIN_7);
+	}
+	//Sonar 2 trigger low
+	else if (TimerCount == 1751) {
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_7, 0);
+	}
+	TimerCount++;
+	//Reset timer, sets loop period as well, every 100ms
+	if (TimerCount >= 5000) {
+		TimerCount = 0;
+	}
+	TimerIntClear(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+}
+
+void initialise(void)
+{
+	SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN |
+	                   SYSCTL_XTAL_16MHZ);
+  
+  
+  //Echo Receive 1
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+  GPIODirModeSet(GPIO_PORTG_BASE, GPIO_PIN_5, GPIO_DIR_MODE_IN);
+  GPIOPadConfigSet(GPIO_PORTG_BASE, GPIO_PIN_5, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);
+  GPIOPinIntEnable(GPIO_PORTG_BASE, GPIO_PIN_5);
+  GPIOIntTypeSet(GPIO_PORTG_BASE, GPIO_PIN_5, GPIO_BOTH_EDGES);
+  //
+  
+  //Echo Receive 2
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);
+  GPIODirModeSet(GPIO_PORTG_BASE, GPIO_PIN_4, GPIO_DIR_MODE_IN);
+  GPIOPadConfigSet(GPIO_PORTG_BASE, GPIO_PIN_4, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);
+  GPIOPinIntEnable(GPIO_PORTG_BASE, GPIO_PIN_4);
+  GPIOIntTypeSet(GPIO_PORTG_BASE, GPIO_PIN_4, GPIO_BOTH_EDGES);
+  //
+  GPIOPortIntRegister(GPIO_PORTG_BASE, PG5Handler);
+  
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER1);
+  TimerConfigure(TIMER1_BASE, TIMER_CFG_16_BIT_PAIR |
+                     TIMER_CFG_B_PERIODIC);
+  //Timer overflows at 50kHz
+  //TimerPrescaleSet(TIMER1_BASE, TIMER_B, 250);
+  TimerLoadSet(TIMER1_BASE, TIMER_B, SysCtlClockGet()/200001);
+  
+  TimerIntRegister(TIMER1_BASE, TIMER_B, Unwrap);
+  TimerIntEnable(TIMER1_BASE, TIMER_TIMB_TIMEOUT);
+  IntEnable(INT_TIMER1B);
+  //TimerEnable(TIMER1_BASE, TIMER_B);
+  
+  //Echo Trigger 1
+  //PF5 Init
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+  GPIODirModeSet(GPIO_PORTF_BASE, GPIO_PIN_5, GPIO_DIR_MODE_OUT);
+  GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_5, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);
+  //
+  
+  //Echo Trigger 2
+  //PF7 Init
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+  GPIODirModeSet(GPIO_PORTF_BASE, GPIO_PIN_5, GPIO_DIR_MODE_OUT);
+  GPIOPadConfigSet(GPIO_PORTF_BASE, GPIO_PIN_5, GPIO_STRENGTH_8MA, GPIO_PIN_TYPE_STD_WPU);
+  //
+  
+  //Timer Init
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+  TimerConfigure(TIMER0_BASE, TIMER_CFG_16_BIT_PAIR |
+                     TIMER_CFG_B_PERIODIC);
+  //Timer overflows at 50kHz
+  //TimerPrescaleSet(TIMER0_BASE, TIMER_B, 250);
+  TimerLoadSet(TIMER0_BASE, TIMER_B, SysCtlClockGet()/200001);
+  TimerIntRegister(TIMER0_BASE, TIMER_B, Timer0IntHandler);
+  TimerIntEnable(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+  IntEnable(INT_TIMER0B);
+  TimerEnable(TIMER0_BASE, TIMER_B);
+  IntMasterEnable();
+  //
+
+  // intialise the OLED display
+  RIT128x96x4Init(1000000);	
+}
+
+void updateDisplay(void)
+{
+	 RIT128x96x4Clear(); // gets rid of the residual digits
+     usprintf(strBuf, "%d cm, %d cm", Distance1, Distance2); // try %d
+     RIT128x96x4StringDraw( strBuf, 10, 10, 15);
+     
+     //usprintf(strBuf, "%d cm", Distance2); // try %d
+     //RIT128x96x4StringDraw( strBuf, 10, 60, 15);
+
+}
+
+
+int main(void)
+{
+    initialise();
+
+    while(1)
+    {
+
+        
+        updateDisplay();
+        
+ 		SysCtlDelay(SysCtlClockGet() / 12);
+    }
+}

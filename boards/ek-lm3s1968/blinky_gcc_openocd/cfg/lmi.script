@@ -1,0 +1,17 @@
+# mthomas 4/2008, tested with OpenOCD SVN555
+
+flash probe 0
+flash erase_check 0
+flash protect_check 0
+flash info 0
+
+
+#flash erase_sector 0 0 63
+#flash write_bank 0 tmpflash.bin 0
+
+flash write_image .\gcc\blinky.bin 0 bin
+
+sleep 200
+
+reset run
+shutdown

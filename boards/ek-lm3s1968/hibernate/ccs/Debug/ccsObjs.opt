@@ -1,0 +1,1 @@
+"./drivers/rit128x96x4.obj" "./startup_ccs.obj" "./hibernate.obj" "./utils/ustdlib.obj" -l"rtsv7M3_T_le_eabi.lib" -l"C:/yagarto-ARM/my_proj/StellarisWare/boards/ek-lm3s1968/hibernate/ccs/../../../../driverlib/ccs/Debug/driverlib.lib" "C:/yagarto-ARM/my_proj/StellarisWare/boards/ek-lm3s1968/hibernate/hibernate_ccs.cmd" 
