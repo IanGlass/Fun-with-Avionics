@@ -7,7 +7,7 @@
 //
 //*****************************************************************************
 
-#include "my_adc.h"  // header file for my_adc.c
+#include "Fun_with_Avionics.h"  // header file for my_adc.c
 
 //*****************************************************************************
 //
@@ -77,13 +77,10 @@ uint16_t ADC_Highest = 628;
 uint16_t ADC_Lowest = 300;
 
 
-
-//Good values with rotor working, 27,3,3,60,1,2
-//Ideal approx Kp = 70000 ki = 4 Kd = 2
 //array for displaying gains & desired altitude/yaw
 uint16_t Disp_Array[8] = {15, 10, 10 ,10, 10, 10, 10, 10};
 
-//Array for Alt_Kp, Alt_Kd, Alt_Ki, Yaw_Kp, Yaw_Kd and Yaw_Ki
+//Array for Alt_Kp, Alt_Kd, Alt_Ki, Yaw_Kp, Yaw_Kd and Yaw_Ki, the coefficients for PID control
 uint16_t Gain_Array[6] = {27, 3, 3, 60, 1, 2};
 uint16_t Array_Count = 0;
 
@@ -154,40 +151,7 @@ void SysTickHandler (void)
 	PID_Control();
 }
 
-//Single interrupt implementation of QE PF5 & PF7
-/*void Phase_Handler(void) 
-{
-	GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_5);
-	GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_7);
-	if (G_Prev_Phase_A_State != Is_PF5_High) {
-		if (!Is_PF5_High) {
-			G_Phase_A_State = 0;
-			G_Prev_Phase_A_State = 1;
-		}
-		else {
-			G_Phase_A_State = 1;
-			G_Prev_Phase_A_State = 0;
-		}
-	}
-	else {
-		if (!Is_PF7_High) {
-			G_Phase_B_State = 0;
-		}
-		else {
-			G_Phase_B_State = 1;
-		}
-	}
-	if (G_Phase_A_State == G_Phase_B_State) {
-		G_Actual_Yaw += 1.61;
-	}
-	else {
-		G_Actual_Yaw -= 1.61;
-	}
-}*/
-
-
-//First two interrupt implemenation of QE
-//PA1/U0Tx (phase A) interrupt handler
+//PA1/U0Tx (phase A) interrupt handler for quadrature encoding, works in conjunction with Phase_B_Handler()
 void Phase_A_Handler(void) 
 {
 	GPIOPinIntClear(GPIO_PORTA_BASE, GPIO_PIN_1);
@@ -205,7 +169,7 @@ void Phase_A_Handler(void)
 	}
 }
 
-//PF5 (phase B) interrupt handler
+//PF5 (phase B) interrupt handler for quadrature encoding
 void Phase_B_Handler(void) 
 {
 	GPIOPinIntClear(GPIO_PORTF_BASE, GPIO_PIN_5);
@@ -217,7 +181,7 @@ void Phase_B_Handler(void)
 	}
 }
 
-//Initialise
+//Initialise peripherals and GPIO
 void initialise(void)
 {    
     
@@ -262,7 +226,7 @@ void initialise(void)
     //
     
     // Set GPIO G2 and D1 as PWM pins.  They are used to output the PWM0 and
-    // PWM1 signals.
+    // PWM1 signals uses to drive motor and tail rotors
     GPIOPinTypePWM(GPIO_PORTG_BASE, GPIO_PIN_2);
     GPIOPinTypePWM(GPIO_PORTD_BASE, GPIO_PIN_1);
     
@@ -412,42 +376,6 @@ void Update_Display (void)
 	sprintf(StrBuff,"%u ", Gain_Array[5]);
 	RIT128x96x4StringDraw(StrBuff, 95, 70, Disp_Array[7]);
 	
-	/*sprintf(StrBuff,"%u ", (int)G_Control);
-	RIT128x96x4StringDraw(StrBuff, 5, 80, 15);*/
-	
-	//Test print for G_Control
-	/*sprintf(StrBuff,"%u ", G_Control);
-	RIT128x96x4StringDraw(StrBuff, 30, 60, 15);
-	
-	sprintf(StrBuff,"%u ", G_Kp);
-	RIT128x96x4StringDraw(StrBuff, 5, 70, 15);
-	sprintf(StrBuff,"%u ", G_Kd);
-	RIT128x96x4StringDraw(StrBuff, 30, 70, 15);*/
-	
-	/*if (G_Actual_Altitude <= 1) {
-		sprintf(StrBuff, "Landed");
-		RIT128x96x4StringDraw(StrBuff, 5, 80, 15);
-	}
-	else {
-		sprintf(StrBuff, "Landed");
-		RIT128x96x4StringDraw(StrBuff, 5, 80, 10);
-	}
-	if (G_Block_Buttons && G_Actual_Altitude <= 1) {
-		sprintf(StrBuff, "ON");
-		RIT128x96x4StringDraw(StrBuff, 46, 70, 10);
-		sprintf(StrBuff, "OFF");
-		RIT128x96x4StringDraw(StrBuff, 60, 70, 15);
-	}
-	else {
-		sprintf(StrBuff, "ON");
-		RIT128x96x4StringDraw(StrBuff, 46, 70, 15);
-		sprintf(StrBuff, "OFF");
-		RIT128x96x4StringDraw(StrBuff, 60, 70, 10);
-	}*/
-	
-	//Draw Yaw scale
-	//RIT128x96x4StringDraw(G_Yaw_Disp_Array, 5, 90, 15);
-	//RIT128x96x4ImageDraw(G_Yaw_Disp_Array, 10, 90, 120, 100);
 }
 
 void Get_ADC(void) 
